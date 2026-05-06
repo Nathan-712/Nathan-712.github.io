@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 Code Vault (Safe Mode)</title>
+<style>
+  /* RESET & BASE */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { 
+    font-family: 'Segoe UI', sans-serif; 
+    background: #f0f2f5; /* Light mode background for better visibility */
+    color: #333; 
+    padding: 2rem; 
+    max-width: 800px; 
+    margin: auto; 
+    line-height: 1.5;
+  }
+
+  /* HEADER */
+  header { 
+    background: #fff; 
+    padding: 1.5rem; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem; 
+    text-align: center; 
+  }
+  h1 { color: #1877f2; margin-bottom: 0.5rem; }
+
+  /* FORMS & INPUTS */
+  .form-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .form-group { margin-bottom: 1.5rem; }
+  .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #555; }
+  
+  /* High Contrast Inputs */
+  .form-group input, .form-group textarea { 
+    width: 100%; 
+    padding: 10px; 
+    border: 2px solid #ccc; 
+    border-radius: 4px; 
+    font-size: 1rem; 
+    background: #fff;
+    color: #000;
+    outline: none;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: #1877f2; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #1877f2;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+  }
+  .btn:hover { background: #1565c0; }
+  .btn-red { background: #dc3545; }
+  .btn-red:hover { background: #c82333; }
+  .btn-green { background: #28a745; }
+  .btn-green:hover { background: #218838; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ITEM LIST */
+  .item-list { list-style: none; }
+  .item-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .item-title { font-weight: bold; font-size: 1.1rem; color: #1877f2; margin-bottom: 0.5rem; }
+  .item-desc { color: #666; margin-bottom: 0.5rem; font-size: 0.9rem; }
+  .item-code {
+    background: #f8f9fa;
+    border: 1px solid #eee;
+    padding: 0.8rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-bottom: 1rem;
+  }
+  .item-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .item-actions button { padding: 6px 12px; font-size: 0.85rem; width: auto; }
+
+  /* TOKEN PANEL */
+  .token-panel {
+    background: #e7f3ff;
+    border: 1px solid #b3d7ff;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* MODAL */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal.active { display: flex; }
+  .modal-content {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🔐 Code Vault</h1>
+  <p>Versi Aman & Sederhana (Tanpa Koneksi Internet)</p>
+</header>
+
+<!-- STATUS BAR -->
+<div id="statusBar" style="background:#fff; padding:0.5rem; border-radius:4px; margin-bottom:1rem; text-align:center; color:#666;">
+  Status: <span id="statusText">Memuat...</span>
+</div>
+
+<!-- SECTION: SETUP (Buat Baru) -->
+<div id="secSetup" class="section">
+  <div class="form-container">
+    <h2 style="margin-bottom:1rem;">🔑 Buat Vault Baru</h2>
+    <div class="form-group">
+      <label>Password Master:</label>
+      <input type="password" id="setupPwd" placeholder="Ketik password...">
+    </div>
+    <div class="form-group">
+      <label>Ulangi Password:</label>
+      <input type="password" id="setupPwdConfirm" placeholder="Ulangi password...">
+    </div>
+    <button class="btn btn-green" onclick="doSetup()">Buat Vault</button>
+  </div>
+</div>
+
+<!-- SECTION: UNLOCK (Buka) -->
+<div id="secUnlock" class="section">
+  <div class="form-container">
+    <h2 style="margin-bottom:1rem;">🔓 Buka Vault</h2>
+    <div class="form-group">
+      <label>Password Master:</label>
+      <input type="password" id="unlockPwd" placeholder="Ketik password...">
+    </div>
+    <button class="btn" onclick="doUnlock()">Buka</button>
+    <div style="margin-top:1rem; text-align:center;">
+      <a href="#" style="color:red; font-size:0.8rem;" onclick="doReset()">Reset Vault (Hapus Semua)</a>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: DASHBOARD (Isi Vault) -->
+<div id="secDashboard" class="section">
+  
+  <!-- Token Manager -->
+  <div class="token-panel">
+    <div id="tokenLockedView">
+      <p>🔑 GitHub Token Terkunci.</p>
+      <button class="btn btn-green" onclick="toggleTokenUnlock()" style="margin-top:0.5rem; width:auto;">Buka Token</button>
+      <div id="tokenPwdForm" style="display:none; margin-top:10px;">
+        <input type="password" id="tokenUnlockPwd" placeholder="Masukkan password master" style="margin-bottom:5px;">
+        <button class="btn" onclick="checkTokenPwd()" style="padding:5px 10px;">OK</button>
+      </div>
+    </div>
+    <div id="tokenUnlockedView" style="display:none;">
+      <p>✅ GitHub Token: <strong id="maskedToken">****</strong></p>
+      <div style="margin-top:5px;">
+        <button class="btn" style="background:#555; width:auto; font-size:0.8rem;" onclick="copyToken()">📋 Copy</button>
+        <button class="btn" style="background:#555; width:auto; font-size:0.8rem;" onclick="updateToken()">✏️ Update</button>
+        <button class="btn btn-red" style="width:auto; font-size:0.8rem;" onclick="lockToken()">🔒 Kunci</button>
+      </div>
+      <div id="tokenUpdateForm" style="display:none; margin-top:10px;">
+        <input type="text" id="newTokenVal" placeholder="ghp_..." style="margin-bottom:5px;">
+        <button class="btn" onclick="saveToken()" style="padding:5px 10px;">Simpan</button>
+      </div>
+    </div>
+    <div id="tokenEmptyView" style="display:none;">
+      <p>🔑 Belum ada token disimpan.</p>
+      <button class="btn" style="width:auto; font-size:0.8rem;" onclick="addNewToken()">➕ Tambah Token</button>
+      <div id="tokenAddForm" style="display:none; margin-top:10px;">
+        <input type="text" id="addTokenVal" placeholder="ghp_..." style="margin-bottom:5px;">
+        <button class="btn" onclick="saveNewToken()" style="padding:5px 10px;">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+    <button class="btn btn-green" style="flex:1;" onclick="showAddItem()">➕ Tambah Kode</button>
+    <button class="btn" style="background:#17a2b8; flex:1;" onclick="doExport()">📤 Export JSON</button>
+    <button class="btn" style="background:#ffc107; color:#333; flex:1;" onclick="showImport()">📥 Import JSON</button>
+    <button class="btn btn-red" style="flex:0 0 auto;" onclick="doLock()">🔒 Kunci Vault</button>
+  </div>
+
+  <!-- Add Item Form -->
+  <div id="addItemForm" class="form-container" style="display:none; border:2px solid #1877f2;">
+    <h3>Tambah Kode Baru</h3>
+    <div class="form-group">
+      <label>Judul:</label>
+      <input type="text" id="itemTitle">
+    </div>
+    <div class="form-group">
+      <label>Keterangan:</label>
+      <input type="text" id="itemDesc">
+    </div>
+    <div class="form-group">
+      <label>Script/Code:</label>
+      <textarea id="itemCode" rows="6"></textarea>
+    </div>
+    <button class="btn btn-green" onclick="saveItem()">Simpan</button>
+    <button class="btn btn-red" style="margin-top:10px;" onclick="hideAddItem()">Batal</button>
+  </div>
+
+  <!-- Import Form -->
+  <div id="importForm" class="form-container" style="display:none; border:2px solid #ffc107;">
+    <h3>Import dari JSON</h3>
+    <input type="file" id="importFile" accept=".json" onchange="handleImport(this)">
+    <p id="importStatus" style="margin-top:10px; font-size:0.9rem;"></p>
+    <button class="btn btn-red" style="margin-top:10px;" onclick="hideImport()">Tutup</button>
+  </div>
+
+  <!-- List -->
+  <ul id="itemList" class="item-list"></ul>
+</div>
+
+<script>
+  // === LOGIC ===
+  var DATA_KEY = 'simple_vault_v1';
+  var vault = null;
+
+  // Simple Hash Function (Pengganti crypto.subtle agar aman di file://)
+  function simpleHash(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      var char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return 'h_' + Math.abs(hash).toString(16);
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(DATA_KEY);
+      if (raw) vault = JSON.parse(raw);
+      else vault = null;
+    } catch(e) {
+      alert('Gagal memuat data! Browser mungkin memblokir penyimpanan.');
+    }
+    updateUI();
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(DATA_KEY, JSON.stringify(vault));
+      return true;
+    } catch(e) {
+      alert('Gagal menyimpan!');
+      return false;
+    }
+  }
+
+  function updateUI() {
+    document.getElementById('secSetup').classList.remove('active');
+    document.getElementById('secUnlock').classList.remove('active');
+    document.getElementById('secDashboard').classList.remove('active');
+    document.getElementById('tokenPwdForm').style.display = 'none';
+    document.getElementById('tokenUpdateForm').style.display = 'none';
+    document.getElementById('tokenAddForm').style.display = 'none';
+    document.getElementById('importForm').style.display = 'none';
+
+    if (!vault) {
+      document.getElementById('secSetup').classList.add('active');
+      document.getElementById('statusText').textContent = 'Belum ada Vault';
+    } else {
+      if (vault.unlocked) {
+        document.getElementById('secDashboard').classList.add('active');
+        document.getElementById('statusText').textContent = 'Terbuka';
+        document.getElementById('statusText').style.color = 'green';
+        renderList();
+        renderToken();
+      } else {
+        document.getElementById('secUnlock').classList.add('active');
+        document.getElementById('statusText').textContent = 'Terkunci';
+        document.getElementById('statusText').style.color = 'red';
+        document.getElementById('unlockPwd').focus();
+      }
+    }
+  }
+
+  // === SETUP & AUTH ===
+  function doSetup() {
+    var p1 = document.getElementById('setupPwd').value;
+    var p2 = document.getElementById('setupPwdConfirm').value;
+    if (p1.length < 4) return alert('Password minimal 4 karakter');
+    if (p1 !== p2) return alert('Password tidak sama');
+
+    vault = {
+      hash: simpleHash(p1),
+      token: null, // encrypted with password conceptually, but simple here
+      items: [],
+      unlocked: true,
+      created: new Date().toISOString()
+    };
+    save();
+    alert('Vault berhasil dibuat!');
+    document.getElementById('setupPwd').value = '';
+    document.getElementById('setupPwdConfirm').value = '';
+    updateUI();
+  }
+
+  function doUnlock() {
+    var p = document.getElementById('unlockPwd').value;
+    if (simpleHash(p) === vault.hash) {
+      vault.unlocked = true;
+      save();
+      document.getElementById('unlockPwd').value = '';
+      updateUI();
+    } else {
+      alert('Password salah!');
+    }
+  }
+
+  function doLock() {
+    vault.unlocked = false;
+    save();
+    updateUI();
+  }
+
+  function doReset() {
+    if (confirm('Yakin hapus semua data?')) {
+      localStorage.removeItem(DATA_KEY);
+      vault = null;
+      updateUI();
+    }
+  }
+
+  // === ITEMS ===
+  function renderList() {
+    var ul = document.getElementById('itemList');
+    ul.innerHTML = '';
+    if (!vault.items.length) {
+      ul.innerHTML = '<li style="text-align:center; padding:2rem; color:#999;">Belum ada kode.</li>';
+      return;
+    }
+    vault.items.forEach(function(item, idx) {
+      var li = document.createElement('li');
+      li.className = 'item-card';
+      li.innerHTML = 
+        '<div class="item-title">'+item.title+'</div>' +
+        '<div class="item-desc">'+item.desc+'</div>' +
+        '<div class="item-code">'+escapeHtml(item.code)+'</div>' +
+        '<div class="item-actions">' +
+          '<button class="btn" onclick="copyItem('+idx+')">📋 Copy</button>' +
+          '<button class="btn btn-red" onclick="deleteItem('+idx+')">🗑️ Hapus</button>' +
+        '</div>';
+      ul.appendChild(li);
+    });
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  function showAddItem() {
+    document.getElementById('addItemForm').style.display = 'block';
+    document.getElementById('itemTitle').value = '';
+    document.getElementById('itemDesc').value = '';
+    document.getElementById('itemCode').value = '';
+  }
+
+  function hideAddItem() {
+    document.getElementById('addItemForm').style.display = 'none';
+  }
+
+  function saveItem() {
+    var t = document.getElementById('itemTitle').value;
+    var d = document.getElementById('itemDesc').value;
+    var c = document.getElementById('itemCode').value;
+    if (!t || !c) return alert('Judul dan Kode wajib diisi');
+
+    vault.items.unshift({ title: t, desc: d, code: c, date: new Date().toISOString() });
+    save();
+    hideAddItem();
+    renderList();
+    alert('Disimpan!');
+  }
+
+  function deleteItem(idx) {
+    if (confirm('Hapus item ini?')) {
+      vault.items.splice(idx, 1);
+      save();
+      renderList();
+    }
+  }
+
+  function copyItem(idx) {
+    var code = vault.items[idx].code;
+    navigator.clipboard.writeText(code).then(function(){alert('Kode disalin!');});
+  }
+
+  // === EXPORT / IMPORT ===
+  function doExport() {
+    if (!vault.items.length) return alert('Kosong');
+    var data = JSON.stringify({ type: 'vault_export', items: vault.items }, null, 2);
+    var blob = new Blob([data], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'vault-backup.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    alert('Download berhasil!');
+  }
+
+  function showImport() {
+    document.getElementById('importForm').style.display = 'block';
+    document.getElementById('importFile').value = '';
+    document.getElementById('importStatus').textContent = '';
+  }
+  
+  function hideImport() {
+    document.getElementById('importForm').style.display = 'none';
+  }
+
+  function handleImport(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var r = new FileReader();
+    r.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        if (data.items && Array.isArray(data.items)) {
+          var count = data.items.length;
+          if (confirm('Ada ' + count + ' item. Tambahkan ke vault sekarang?')) {
+            vault.items = data.items.concat(vault.items);
+            save();
+            renderList();
+            alert('Import sukses!');
+            hideImport();
+          }
+        } else {
+          document.getElementById('importStatus').textContent = 'Format file salah.';
+          document.getElementById('importStatus').style.color = 'red';
+        }
+      } catch(err) {
+        document.getElementById('importStatus').textContent = 'File JSON rusak.';
+        document.getElementById('importStatus').style.color = 'red';
+      }
+    };
+    r.readAsText(file);
+  }
+
+  // === TOKEN ===
+  function renderToken() {
+    document.getElementById('tokenLockedView').style.display = 'none';
+    document.getElementById('tokenUnlockedView').style.display = 'none';
+    document.getElementById('tokenEmptyView').style.display = 'none';
+    
+    if (!vault.token) {
+      document.getElementById('tokenEmptyView').style.display = 'block';
+    } else {
+      document.getElementById('tokenLockedView').style.display = 'block';
+    }
+  }
+
+  function toggleTokenUnlock() {
+    document.getElementById('tokenPwdForm').style.display = 'block';
+  }
+
+  function checkTokenPwd() {
+    var p = document.getElementById('tokenUnlockPwd').value;
+    if (simpleHash(p) === vault.hash) {
+      vault.unlocked = true; // re-verify
+      document.getElementById('tokenLockedView').style.display = 'none';
+      document.getElementById('tokenUnlockedView').style.display = 'block';
+      document.getElementById('maskedToken').textContent = vault.token.substring(0,8) + '...';
+    } else {
+      alert('Password salah');
+    }
+  }
+
+  function lockToken() {
+    renderToken();
+  }
+
+  function addNewToken() {
+    document.getElementById('tokenAddForm').style.display = 'block';
+  }
+
+  function saveNewToken() {
+    var t = document.getElementById('addTokenVal').value.trim();
+    if (!t) return alert('Kosong');
+    vault.token = t; // Simple storage
+    save();
+    document.getElementById('tokenAddForm').style.display = 'none';
+    document.getElementById('addTokenVal').value = '';
+    renderToken();
+    alert('Token disimpan');
+  }
+
+  function updateToken() {
+    document.getElementById('tokenUpdateForm').style.display = 'block';
+  }
+
+  function saveToken() {
+    var t = document.getElementById('newTokenVal').value.trim();
+    if (!t) return alert('Kosong');
+    vault.token = t;
+    save();
+    document.getElementById('tokenUpdateForm').style.display = 'none';
+    document.getElementById('newTokenVal').value = '';
+    document.getElementById('maskedToken').textContent = vault.token.substring(0,8) + '...';
+    alert('Token diupdate');
+  }
+
+  function copyToken() {
+    if (vault.token) {
+      navigator.clipboard.writeText(vault.token).then(function(){alert('Token disalin!');});
+    }
+  }
+
+  // === INIT ===
+  window.onload = load;
+</script>
+
+</body>
+</html>
