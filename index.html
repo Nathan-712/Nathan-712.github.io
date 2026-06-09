@@ -133,13 +133,16 @@
     width: 90%;
     text-align: center;
   }
+  .secure-input {
+  -webkit-text-security: disc; /* Mengubah tampilan teks input menjadi lingkaran/bullet seperti password */
+}
+
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🔐 Code Vault</h1>
-  <p>Versi Aman & Sederhana (Tanpa Koneksi Internet)</p>
+<h1>📝 Catatan Koding</h1> <p>Aplikasi notepad lokal untuk menyimpan potongan teks kode</p>
 </header>
 
 <!-- STATUS BAR -->
@@ -169,7 +172,9 @@
     <h2 style="margin-bottom:1rem;">🔓 Buka Vault</h2>
     <div class="form-group">
       <label>passkey</label>
-      <input type="password" id="unlockPwd" placeholder="Ketik passkey...">
+      <!-- Ubah type="password" menjadi type="text" dan beri class khusus -->
+<input type="text" id="unlockPwd" class="secure-input" placeholder="Ketik passkey...">
+
     </div>
     <button class="btn" onclick="doUnlock()">Buka</button>
     <div style="margin-top:1rem; text-align:center;">
